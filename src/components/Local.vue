@@ -6,7 +6,7 @@
           <v-textarea
             name="input-7-1"
             label="Add a new clip here!"
-            v-model="newclip"
+            v-model="newClip"
           ></v-textarea>
         </v-col>
       </v-row>
@@ -23,7 +23,7 @@
     </v-container>
 
     <v-alert text color="red" border="left">
-      {{ newclip != "" ? newclip : preview }}
+      {{ newClip !== "" ? newClip : preview }}
     </v-alert>
     <v-container>
       <v-alert
@@ -31,10 +31,25 @@
         :key="i"
         text
         color="blue"
-        icon="far fa-copy"
         border="left"
+        class="alertJustify"
       >
-        {{ clip.title }}
+        <span>
+          {{ clip.title }}
+        </span>
+
+        <span>
+          <v-btn
+            @click="copy(clip.id, $event)"
+            class="ma-2"
+            outlined
+            x-small
+            fab
+            color="indigo"
+          >
+            <v-icon dark>mdi-content-copy</v-icon>
+          </v-btn>
+        </span>
       </v-alert>
     </v-container>
   </v-container>
@@ -44,25 +59,37 @@
 export default {
   name: "Local",
 
-  data: () => ({
-    newclip: "",
-    clips: [],
-    preview: "Here you'll see preview as soon as you start to type.",
-    emptyError: "Cannot add an Empty Clip."
-  }),
+  data: function() {
+    return {
+      newClip: "",
+      clips: this.$store.state.clips,
+      preview: "Here you'll see preview as soon as you start to type.",
+      emptyError: "Cannot add an Empty Clip."
+    };
+  },
 
   methods: {
     onSubmit() {
-      if (this.newclip != "") {
+      //  doing all the internal process to update
+      if (this.newClip !== "") {
         var newClipObj = {
           id: this.clips.length + 1,
-          title: this.newclip
+          title: this.newClip
         };
       } else {
         alert(this.emptyError);
       }
       this.clips = [newClipObj, ...this.clips];
-      this.newclip = "";
+      this.newClip = "";
+
+      //   updating the clips in the store and in the cookie
+      this.$store.commit("updateClips", this.clips);
+      this.$store.commit("updateCookieClips");
+    },
+    copy(id) {
+      navigator.clipboard.writeText(this.clips[id]["title"]).then(() => {
+        alert('copied to clipboard ');
+      });
     }
   }
 };
@@ -72,5 +99,9 @@ export default {
 .center {
   display: flex;
   justify-content: center;
+}
+.alertJustify {
+  justify-content: space-between;
+  display: flex;
 }
 </style>

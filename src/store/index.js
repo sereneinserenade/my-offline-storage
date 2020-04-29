@@ -7,24 +7,21 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    db: {
-      clips: [
-        {
-          id: 1,
-          content: "say something im giving up on you",
-          time: ""
-        }
-      ]
-    }
+    clips: []
   },
   mutations: {
-    updateDB(state, db) {
-      state.db = db;
+    updateClips(state, clips) {
+      state.clips = clips;
+    },
+    updateCookieClips(state) {
+      Vue.$cookies.set("clips", state.clips, Infinity);
     }
   },
   actions: {
-    getDB(state) {
-      return state.db;
+    getInitClips(state) {
+      if (Vue.$cookies.get("clips")) {
+        state.clips = Vue.$cookies.get("clips");
+      }
     }
   },
   modules: {}

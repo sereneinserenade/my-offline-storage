@@ -9,9 +9,9 @@
 <script>
 export default {
   name: "App",
-
-  data: () => ({
-    //
-  })
+  data: () => ({}),
+  mounted() {
+    this.$store.dispatch("getInitClips");
+  }
 };
 </script>
