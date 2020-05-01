@@ -36,12 +36,12 @@
       >
         {{ clip.title }}
 
-<!--        <span @click="copy(clip.id, $event)">-->
-<!--          <v-btn class="ma-2" outlined x-small fab color="indigo">-->
-<!--            <v-icon dark>mdi-content-copy</v-icon>-->
-<!--          </v-btn>-->
-<!--          <span style="visibility: hidden"> {{ clip.id }} </span>-->
-<!--        </span>-->
+        <!--        <span @click="copy(clip.id, $event)">-->
+        <!--          <v-btn class="ma-2" outlined x-small fab color="indigo">-->
+        <!--            <v-icon dark>mdi-content-copy</v-icon>-->
+        <!--          </v-btn>-->
+        <!--          <span style="visibility: hidden"> {{ clip.id }} </span>-->
+        <!--        </span>-->
       </v-alert>
     </v-container>
   </v-container>
@@ -85,7 +85,7 @@ export default {
 
       //  managing the cookies
       this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
-    },
+    }
   }
 };
 </script>
