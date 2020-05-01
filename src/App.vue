@@ -1,14 +1,23 @@
 <template>
   <v-app>
     <v-content>
-      <router-view />
+      <Local></Local>
     </v-content>
   </v-app>
 </template>
 
 <script>
+import Local from "./components/Local";
+
 export default {
   name: "App",
-  data: () => ({})
+
+  components: {
+    Local
+  },
+
+  data: () => ({
+    //
+  })
 };
 </script>
