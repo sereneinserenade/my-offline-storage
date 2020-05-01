@@ -1,5 +1,10 @@
 # my-offline-storage
 
+> This is a simple project made with [VueJS](https://vuejs.org/), [Vuetify](https://vuetifyjs.com/) and [vue-cookies](https://github.com/cmp-cc/vue-cookies) that also works as a PWA ( Progressive web app and gives you opportunity to save your tiny things offline )
+
+> The website can be found here [https://hungry-colden-2ec503.netlify.app/](https://hungry-colden-2ec503.netlify.app/) !! Contributions and feature requests are always welcome!!
+
+
 ## Project setup
 ```
 npm install
