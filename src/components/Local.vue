@@ -34,22 +34,14 @@
         border="left"
         class="alertJustify"
       >
-        <span>
-          {{ clip.title }}
-        </span>
+        {{ clip.title }}
 
-        <span>
-          <v-btn
-            @click="copy(clip.id, $event)"
-            class="ma-2"
-            outlined
-            x-small
-            fab
-            color="indigo"
-          >
-            <v-icon dark>mdi-content-copy</v-icon>
-          </v-btn>
-        </span>
+<!--        <span @click="copy(clip.id, $event)">-->
+<!--          <v-btn class="ma-2" outlined x-small fab color="indigo">-->
+<!--            <v-icon dark>mdi-content-copy</v-icon>-->
+<!--          </v-btn>-->
+<!--          <span style="visibility: hidden"> {{ clip.id }} </span>-->
+<!--        </span>-->
       </v-alert>
     </v-container>
   </v-container>
@@ -62,10 +54,19 @@ export default {
   data: function() {
     return {
       newClip: "",
-      clips: this.$store.state.clips,
+      clips: [],
       preview: "Here you'll see preview as soon as you start to type.",
       emptyError: "Cannot add an Empty Clip."
     };
+  },
+
+  mounted() {
+    if (JSON.parse(this.$cookies.get("clips"))) {
+      this.clips = JSON.parse(this.$cookies.get("clips"));
+    }
+    this.clips.forEach(e => {
+      console.log(e.id, e.title);
+    });
   },
 
   methods: {
@@ -73,7 +74,7 @@ export default {
       //  doing all the internal process to update
       if (this.newClip !== "") {
         var newClipObj = {
-          id: this.clips.length + 1,
+          id: this.clips.length,
           title: this.newClip
         };
       } else {
@@ -82,15 +83,9 @@ export default {
       this.clips = [newClipObj, ...this.clips];
       this.newClip = "";
 
-      //   updating the clips in the store and in the cookie
-      this.$store.commit("updateClips", this.clips);
-      this.$store.commit("updateCookieClips");
+      //  managing the cookies
+      this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
     },
-    copy(id) {
-      navigator.clipboard.writeText(this.clips[id]["title"]).then(() => {
-        alert('copied to clipboard ');
-      });
-    }
   }
 };
 </script>
@@ -101,7 +96,8 @@ export default {
   justify-content: center;
 }
 .alertJustify {
-  justify-content: space-between;
   display: flex;
+  justify-content: space-between !important;
+  align-content: space-between;
 }
 </style>
