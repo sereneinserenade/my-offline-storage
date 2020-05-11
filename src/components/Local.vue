@@ -1,5 +1,11 @@
 <template>
   <v-container>
+    <v-snackbar v-model="emptyString" :timeout="timeout">
+      {{ emptyStringText }}
+      <v-btn color="blue" text @click="emptyString = false">
+        Close
+      </v-btn>
+    </v-snackbar>
     <v-container class="grey lighten-5">
       <v-row no-gutters>
         <v-col>
@@ -23,9 +29,11 @@
     </v-container>
 
     <v-alert text color="red" border="left">
-      {{ newClip !== "" ? newClip : preview }}
+      <div style="text-align: center">
+        {{ newClip !== "" ? newClip : preview }}
+      </div>
     </v-alert>
-    <v-container>
+    <v-container v-if="clips.length > 0">
       <v-alert
         v-for="(clip, i) in clips"
         :key="i"
@@ -55,8 +63,10 @@ export default {
     return {
       newClip: "",
       clips: [],
-      preview: "Here you'll see preview as soon as you start to type.",
-      emptyError: "Cannot add an Empty Clip."
+      preview: "Here you'll see preview as soon as you start typing.",
+      emptyString: false,
+      emptyStringText: "Cannot add empty string",
+      timeout: 3000
     };
   },
 
@@ -77,14 +87,14 @@ export default {
           id: this.clips.length,
           title: this.newClip
         };
-      } else {
-        alert(this.emptyError);
-      }
-      this.clips = [newClipObj, ...this.clips];
-      this.newClip = "";
+        this.clips = [newClipObj, ...this.clips];
+        this.newClip = "";
 
-      //  managing the cookies
-      this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+        //  managing the cookies
+        this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+      } else {
+        this.emptyString = true;
+      }
     }
   }
 };
@@ -99,5 +109,6 @@ export default {
   display: flex;
   justify-content: space-between !important;
   align-content: space-between;
+  text-align: center;
 }
 </style>
