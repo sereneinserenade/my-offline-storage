@@ -6,6 +6,18 @@
         Close
       </v-btn>
     </v-snackbar>
+    <v-snackbar v-model="copied" :timeout="timeout">
+      {{ stringCopied }}
+      <v-btn color="blue" text @click="copied = false">
+        Close
+      </v-btn>
+    </v-snackbar>
+    <v-snackbar v-model="notCopied" :timeout="timeout">
+      {{ stringNotCopied }}
+      <v-btn color="blue" text @click="notCopied = false">
+        Close
+      </v-btn>
+    </v-snackbar>
     <v-container class="grey lighten-5">
       <v-row no-gutters>
         <v-col>
@@ -42,14 +54,14 @@
         border="left"
         class="alertJustify"
       >
-        {{ clip.title }}
-
-        <!--        <span @click="copy(clip.id, $event)">-->
-        <!--          <v-btn class="ma-2" outlined x-small fab color="indigo">-->
-        <!--            <v-icon dark>mdi-content-copy</v-icon>-->
-        <!--          </v-btn>-->
-        <!--          <span style="visibility: hidden"> {{ clip.id }} </span>-->
-        <!--        </span>-->
+        <span @click="copy(clip.id)">
+          <v-btn class="ma-2" outlined x-small fab color="indigo">
+            <v-icon dark>mdi-content-copy</v-icon>
+          </v-btn>
+        </span>
+        <span>
+          {{ clip.title }}
+        </span>
       </v-alert>
     </v-container>
   </v-container>
@@ -61,12 +73,16 @@ export default {
 
   data: function() {
     return {
+      stringCopied: "Copied to clipboard",
       newClip: "",
       clips: [],
       preview: "Here you'll see preview as soon as you start typing.",
       emptyString: false,
+      copied: false,
+      notCopied: false,
       emptyStringText: "Cannot add empty string",
-      timeout: 3000
+      timeout: 3000,
+      stringNotCopied: "Could not copy to the clipboard, is the App permitted ?"
     };
   },
 
@@ -88,6 +104,11 @@ export default {
           title: this.newClip
         };
         this.clips = [newClipObj, ...this.clips];
+
+        // reshuffing the array
+        this.clips.filter(clip => {
+          clip.id = this.clips.indexOf(clip);
+        });
         this.newClip = "";
 
         //  managing the cookies
@@ -95,6 +116,16 @@ export default {
       } else {
         this.emptyString = true;
       }
+    },
+    copy(id) {
+      navigator.clipboard
+        .writeText(this.clips[id].title)
+        .then(() => {
+          this.copied = true;
+        })
+        .catch(() => {
+          this.notCopied = true;
+        });
     }
   }
 };
@@ -104,11 +135,5 @@ export default {
 .center {
   display: flex;
   justify-content: center;
-}
-.alertJustify {
-  display: flex;
-  justify-content: space-between !important;
-  align-content: space-between;
-  text-align: center;
 }
 </style>
