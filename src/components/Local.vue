@@ -1,5 +1,23 @@
 <template>
   <v-container>
+    <v-snackbar v-model="emptyString" :timeout="timeout">
+      {{ emptyStringText }}
+      <v-btn color="blue" text @click="emptyString = false">
+        Close
+      </v-btn>
+    </v-snackbar>
+    <v-snackbar v-model="copied" :timeout="timeout">
+      {{ stringCopied }}
+      <v-btn color="blue" text @click="copied = false">
+        Close
+      </v-btn>
+    </v-snackbar>
+    <v-snackbar v-model="notCopied" :timeout="timeout">
+      {{ stringNotCopied }}
+      <v-btn color="blue" text @click="notCopied = false">
+        Close
+      </v-btn>
+    </v-snackbar>
     <v-container class="grey lighten-5">
       <v-row no-gutters>
         <v-col>
@@ -23,9 +41,11 @@
     </v-container>
 
     <v-alert text color="red" border="left">
-      {{ newClip !== "" ? newClip : preview }}
+      <div style="text-align: center">
+        {{ newClip !== "" ? newClip : preview }}
+      </div>
     </v-alert>
-    <v-container>
+    <v-container v-if="clips.length > 0">
       <v-alert
         v-for="(clip, i) in clips"
         :key="i"
@@ -34,14 +54,14 @@
         border="left"
         class="alertJustify"
       >
-        {{ clip.title }}
-
-        <!--        <span @click="copy(clip.id, $event)">-->
-        <!--          <v-btn class="ma-2" outlined x-small fab color="indigo">-->
-        <!--            <v-icon dark>mdi-content-copy</v-icon>-->
-        <!--          </v-btn>-->
-        <!--          <span style="visibility: hidden"> {{ clip.id }} </span>-->
-        <!--        </span>-->
+        <span @click="copy(clip.id)">
+          <v-btn class="ma-2" outlined x-small fab color="indigo">
+            <v-icon dark>mdi-content-copy</v-icon>
+          </v-btn>
+        </span>
+        <span>
+          {{ clip.title }}
+        </span>
       </v-alert>
     </v-container>
   </v-container>
@@ -53,10 +73,16 @@ export default {
 
   data: function() {
     return {
+      stringCopied: "Copied to clipboard",
       newClip: "",
       clips: [],
-      preview: "Here you'll see preview as soon as you start to type.",
-      emptyError: "Cannot add an Empty Clip."
+      preview: "Here you'll see preview as soon as you start typing.",
+      emptyString: false,
+      copied: false,
+      notCopied: false,
+      emptyStringText: "Cannot add empty string",
+      timeout: 3000,
+      stringNotCopied: "Could not copy to the clipboard, is the App permitted ?"
     };
   },
 
@@ -77,14 +103,29 @@ export default {
           id: this.clips.length,
           title: this.newClip
         };
-      } else {
-        alert(this.emptyError);
-      }
-      this.clips = [newClipObj, ...this.clips];
-      this.newClip = "";
+        this.clips = [newClipObj, ...this.clips];
 
-      //  managing the cookies
-      this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+        // reshuffing the array
+        this.clips.filter(clip => {
+          clip.id = this.clips.indexOf(clip);
+        });
+        this.newClip = "";
+
+        //  managing the cookies
+        this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+      } else {
+        this.emptyString = true;
+      }
+    },
+    copy(id) {
+      navigator.clipboard
+        .writeText(this.clips[id].title)
+        .then(() => {
+          this.copied = true;
+        })
+        .catch(() => {
+          this.notCopied = true;
+        });
     }
   }
 };
@@ -94,10 +135,5 @@ export default {
 .center {
   display: flex;
   justify-content: center;
-}
-.alertJustify {
-  display: flex;
-  justify-content: space-between !important;
-  align-content: space-between;
 }
 </style>
