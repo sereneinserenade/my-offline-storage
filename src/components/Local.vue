@@ -81,8 +81,10 @@ export default {
       notCopied: false,
       emptyStringText: "Cannot add empty string",
       timeout: 3000,
-      stringNotCopied: "Could not copy to the clipboard, is the App permitted ?",
-      gotDeletedString: "Clip has been successfully deleted"
+      stringNotCopied:
+        "Could not copy to the clipboard, is the App permitted ?",
+      gotDeletedString: "Clip has been successfully deleted",
+      just_got_deleted: false
     };
   },
 
@@ -123,17 +125,10 @@ export default {
         });
     },
     delete_clip(id) {
-      clippy_at_knife = this.clips.filter(clip => {
-        clip.id = id
-      })
       this.clips.splice(id, 1);
       this.reshuffel();
-
-      clip_that_got_deleted = this.clips.filter(clip => {
-        clip.id = clippy_at_knife
-      })
       this.manage_cookie();
-      this.just_got_deleted: true;
+      this.just_got_deleted = true;
     },
     reshuffel() {
       // reshuffling the array for the exact indexes
