@@ -2,21 +2,19 @@
   <v-container>
     <v-snackbar v-model="emptyString" :timeout="timeout">
       {{ emptyStringText }}
-      <v-btn color="blue" text @click="emptyString = false">
-        Close
-      </v-btn>
+      <v-btn color="blue" text @click="emptyString = false">Close</v-btn>
     </v-snackbar>
     <v-snackbar v-model="copied" :timeout="timeout">
       {{ stringCopied }}
-      <v-btn color="blue" text @click="copied = false">
-        Close
-      </v-btn>
+      <v-btn color="blue" text @click="copied = false">Close</v-btn>
     </v-snackbar>
     <v-snackbar v-model="notCopied" :timeout="timeout">
       {{ stringNotCopied }}
-      <v-btn color="blue" text @click="notCopied = false">
-        Close
-      </v-btn>
+      <v-btn color="blue" text @click="notCopied = false">Close</v-btn>
+    </v-snackbar>
+    <v-snackbar v-model="just_got_deleted" :timeout="timeout">
+      {{ gotDeletedString }}
+      <v-btn color="blue" text @click="just_got_deleted = false">Close</v-btn>
     </v-snackbar>
     <v-container class="grey lighten-5">
       <v-row no-gutters>
@@ -36,13 +34,11 @@
       </v-row>
     </v-container>
 
-    <v-container class="center">
-      Preview
-    </v-container>
+    <v-container class="center">Preview</v-container>
 
     <v-alert text color="red" border="left">
       <div style="text-align: center">
-        {{ newClip !== "" ? newClip : preview }}
+        {{ newClip !== "" ? `${newClip}\n` : preview }}
       </div>
     </v-alert>
     <v-container v-if="clips.length > 0">
@@ -59,9 +55,12 @@
             <v-icon dark>mdi-content-copy</v-icon>
           </v-btn>
         </span>
-        <span>
-          {{ clip.title }}
+        <span @click="delete_clip(clip.id)">
+          <v-btn class="ma-2" outlined x-small fab color="indigo">
+            <v-icon dark>mdi-delete</v-icon>
+          </v-btn>
         </span>
+        <span>{{ clip.title }}</span>
       </v-alert>
     </v-container>
   </v-container>
@@ -82,7 +81,8 @@ export default {
       notCopied: false,
       emptyStringText: "Cannot add empty string",
       timeout: 3000,
-      stringNotCopied: "Could not copy to the clipboard, is the App permitted ?"
+      stringNotCopied: "Could not copy to the clipboard, is the App permitted ?",
+      gotDeletedString: "Clip has been successfully deleted"
     };
   },
 
@@ -105,14 +105,9 @@ export default {
         };
         this.clips = [newClipObj, ...this.clips];
 
-        // reshuffing the array
-        this.clips.filter(clip => {
-          clip.id = this.clips.indexOf(clip);
-        });
+        this.reshuffel();
         this.newClip = "";
-
-        //  managing the cookies
-        this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+        this.manage_cookie();
       } else {
         this.emptyString = true;
       }
@@ -126,6 +121,29 @@ export default {
         .catch(() => {
           this.notCopied = true;
         });
+    },
+    delete_clip(id) {
+      clippy_at_knife = this.clips.filter(clip => {
+        clip.id = id
+      })
+      this.clips.splice(id, 1);
+      this.reshuffel();
+
+      clip_that_got_deleted = this.clips.filter(clip => {
+        clip.id = clippy_at_knife
+      })
+      this.manage_cookie();
+      this.just_got_deleted: true;
+    },
+    reshuffel() {
+      // reshuffling the array for the exact indexes
+      this.clips.filter(clip => {
+        clip.id = this.clips.indexOf(clip);
+      });
+    },
+    manage_cookie() {
+      //  managing the cookies
+      this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
     }
   }
 };
