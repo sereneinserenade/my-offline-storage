@@ -28,7 +28,7 @@
       </v-row>
 
       <v-row class="center">
-        <v-btn @click="onSubmit" class="ma-2" outlined large fab color="indigo">
+        <v-btn @click="onSubmit" class="ma-2" outlined large fab color="green">
           <v-icon dark>mdi-plus</v-icon>
         </v-btn>
       </v-row>
@@ -55,6 +55,16 @@
             <v-icon dark>mdi-content-copy</v-icon>
           </v-btn>
         </span>
+        <span v-if="clip.fav" @click="to_favourite(clip.id)">
+          <v-btn class="ma-2" outlined x-small fab color="orange">
+            <v-icon dark>mdi-star</v-icon>
+          </v-btn>
+        </span>
+        <span v-else @click="to_favourite(clip.id)">
+          <v-btn class="ma-2" outlined x-small fab color="orange">
+            <v-icon dark>mdi-star-outline</v-icon>
+          </v-btn>
+        </span>
         <span @click="delete_clip(clip.id)">
           <v-btn class="ma-2" outlined x-small fab color="red">
             <v-icon dark>mdi-delete-forever</v-icon>
@@ -73,19 +83,20 @@ export default {
 
   data: function() {
     return {
-      stringCopied: "Copied to clipboard",
+      stringCopied: "Copied to clipboard.",
       newClip: "",
       clips: [],
-      preview: "Here you'll see preview as soon as you start typing.",
+      preview: "Start typing to see preview",
       emptyString: false,
       copied: false,
       notCopied: false,
-      emptyStringText: "Cannot add empty string",
-      timeout: 3000,
+      emptyStringText: "Cannot add empty clip.",
+      timeout: 1000,
       stringNotCopied:
         "Could not copy to the clipboard, is the App permitted ?",
-      gotDeletedString: "Clip has been successfully deleted",
-      just_got_deleted: false
+      gotDeletedString: "Clip deleted!",
+      just_got_deleted: false,
+      messageAddToFav: "Added to favourites!"
     };
   },
 
@@ -100,6 +111,8 @@ export default {
 
   methods: {
     getNow() {
+      // getting the current time
+
       const today = new Date();
       const month = today.toLocaleString("default", { month: "long" });
       const date = today.getDate() + " " + month + ", " + today.getFullYear();
@@ -107,14 +120,17 @@ export default {
     },
     onSubmit() {
       //  doing all the internal process to update
+
       if (this.newClip !== "") {
         var newClipObj = {
           id: this.clips.length,
           title: this.newClip,
+          fav: false,
           created_on: this.getNow()
         };
-        this.clips = [newClipObj, ...this.clips];
 
+        // adding the clip to the start of the array and then reshuffling and making the new clip = ""
+        this.clips = [newClipObj, ...this.clips];
         this.reshuffel();
         this.newClip = "";
         this.manage_cookie();
@@ -123,6 +139,8 @@ export default {
       }
     },
     copy(id) {
+      // method to copy to the clipboard if the permission is given
+
       navigator.clipboard
         .writeText(this.clips[id].title)
         .then(() => {
@@ -133,19 +151,29 @@ export default {
         });
     },
     delete_clip(id) {
+      // deleting the clip
+
       this.clips.splice(id, 1);
       this.reshuffel();
       this.manage_cookie();
       this.just_got_deleted = true;
     },
+    to_favourite(id) {
+      // adding to favourite
+
+      this.clips[id].fav = !this.clips[id].fav;
+      this.manage_cookie();
+    },
     reshuffel() {
       // reshuffling the array for the exact indexes
+
       this.clips.filter(clip => {
         clip.id = this.clips.indexOf(clip);
       });
     },
     manage_cookie() {
       //  managing the cookies
+
       this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
     }
   }
