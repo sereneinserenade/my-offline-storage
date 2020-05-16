@@ -61,6 +61,7 @@
           </v-btn>
         </span>
         <span>{{ clip.title }}</span>
+        <span class="small-info"> Created on: {{ clip.created_on }} </span>
       </v-alert>
     </v-container>
   </v-container>
@@ -98,12 +99,19 @@ export default {
   },
 
   methods: {
+    getNow() {
+      const today = new Date();
+      const month = today.toLocaleString("default", { month: "long" });
+      const date = today.getDate() + " " + month + ", " + today.getFullYear();
+      return date + " " + today.getHours() + ":" + today.getMinutes();
+    },
     onSubmit() {
       //  doing all the internal process to update
       if (this.newClip !== "") {
         var newClipObj = {
           id: this.clips.length,
-          title: this.newClip
+          title: this.newClip,
+          created_on: this.getNow()
         };
         this.clips = [newClipObj, ...this.clips];
 
@@ -148,5 +156,17 @@ export default {
 .center {
   display: flex;
   justify-content: center;
+}
+.small-info {
+  position: absolute;
+  right: 0.36em;
+  bottom: 0.18em;
+  font-size: 0.85em;
+}
+/* better look for the small devices */
+@media (max-width: 720px) {
+  .small-info {
+    font-size: 0.65em;
+  }
 }
 </style>
