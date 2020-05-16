@@ -51,13 +51,13 @@
         class="alertJustify"
       >
         <span @click="copy(clip.id)">
-          <v-btn class="ma-2" outlined x-small fab color="indigo">
+          <v-btn class="ma-2" outlined x-small fab color="green">
             <v-icon dark>mdi-content-copy</v-icon>
           </v-btn>
         </span>
         <span @click="delete_clip(clip.id)">
-          <v-btn class="ma-2" outlined x-small fab color="indigo">
-            <v-icon dark>mdi-delete</v-icon>
+          <v-btn class="ma-2" outlined x-small fab color="red">
+            <v-icon dark>mdi-delete-forever</v-icon>
           </v-btn>
         </span>
         <span>{{ clip.title }}</span>
