@@ -40,7 +40,7 @@
     <main v-if="clips.length > 0">
       <div v-for="(clip, i) in clips" :key="i">
         <v-alert
-          v-if="!show_archived && !clip.archived"
+          v-if="!showArchived && !clip.archived"
           class="my-alert"
           text
           color="blue"
@@ -164,9 +164,13 @@
         {{ stringNotCopied }}
         <v-btn color="blue" text @click="notCopied = false">Close</v-btn>
       </v-snackbar>
-      <v-snackbar v-model="just_got_deleted" :timeout="timeout">
+      <v-snackbar v-model="justGotDeleted" :timeout="timeout">
         {{ gotDeletedString }}
-        <v-btn color="blue" text @click="just_got_deleted = false">Close</v-btn>
+        <v-btn color="blue" text @click="justGotDeleted = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="justGotArchived" :timeout="timeout">
+        {{ messageArchived }}
+        <v-btn color="blue" text @click="justGotArchived = false">Close</v-btn>
       </v-snackbar>
     </div>
   </v-container>
@@ -186,13 +190,15 @@ export default {
         "Could not copy to the clipboard, is the App permitted ?",
       gotDeletedString: "Clip deleted!",
       messageAddToFav: "Added to favourites!",
+      messageArchived: "Clip Archived!",
 
       // logical parameters
       emptyString: false,
       copied: false,
       notCopied: false,
-      just_got_deleted: false,
-      show_archived: false,
+      justGotDeleted: false,
+      showArchived: false,
+      justGotArchived: false,
 
       // logic for the new life
       newClip: "",
@@ -234,7 +240,7 @@ export default {
       //  doing all the internal process to update
 
       if (this.newClip !== "") {
-        var newClipObj = {
+        let newClipObj = {
           id: this.clips.length,
           title: this.newClip,
           fav: false,
@@ -269,7 +275,7 @@ export default {
       this.clips.splice(id, 1);
       this.reshuffel();
       this.manage_cookie();
-      this.just_got_deleted = true;
+      this.justGotDeleted = true;
     },
     favouriteClip(id) {
       // adding to favourite
@@ -282,6 +288,7 @@ export default {
 
       this.clips[id].archived = !this.clips[id].archived;
       this.manage_cookie();
+      this.justGotArchived = true;
     }
   }
 };
@@ -299,10 +306,5 @@ export default {
 
 .original-text::first-letter {
   font-size: 1.5em;
-}
-
-.bottom-nav {
-  position: fixed !important;
-  bottom: 0 !important ;
 }
 </style>
