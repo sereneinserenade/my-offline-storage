@@ -213,6 +213,17 @@ export default {
     if (JSON.parse(this.$cookies.get("clips"))) {
       this.clips = JSON.parse(this.$cookies.get("clips"));
     }
+
+    // adding sample clip
+    this.clips.push({
+      id: 0,
+      title: "Sample clip",
+      fav: false,
+      created_on: this.getNow(),
+      archived: false
+    });
+
+    this.reshuffel();
   },
 
   methods: {
