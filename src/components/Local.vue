@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <!-- input container with button -->
     <v-container class="mb-2 grey lighten-5">
       <v-row no-gutters>
         <v-col>
@@ -37,14 +38,38 @@
       </div>
     </v-alert>
 
-    <main v-if="clips.length > 0">
-      <div v-for="(clip, i) in clips" :key="i">
+    <!-- the clip navigation -->
+    <v-bottom-navigation
+      class="mb-3"
+      :value="activeNavButton"
+      color="purple lighten-1"
+    >
+      <v-btn>
+        <span>Recents</span>
+        <v-icon>mdi-history</v-icon>
+      </v-btn>
+
+      <v-btn>
+        <span>Favorites</span>
+        <v-icon>mdi-star</v-icon>
+      </v-btn>
+
+      <v-btn>
+        <span>Nearby</span>
+        <v-icon>mdi-archive</v-icon>
+      </v-btn>
+    </v-bottom-navigation>
+
+    <!-- the clips showing -->
+    <main v-if="clipsToShow.length > 0">
+      <div v-for="(clip, i) in clipsToShow" :key="i">
         <v-alert
           v-if="!showArchived && !clip.archived"
           class="my-alert"
           text
           color="blue"
           border="left"
+          v-ripple
         >
           <!-- showing the date -->
           <div class="small-info">Created on: {{ clip.created_on }}</div>
@@ -203,9 +228,11 @@ export default {
       // logic for the new life
       newClip: "",
       clips: [],
+      activeNavButton: 1,
 
       // forein component requirements
-      timeout: 1500
+      timeout: 1500,
+      bottomNav: "recent"
     };
   },
 
@@ -215,15 +242,36 @@ export default {
     }
 
     // adding sample clip
-    this.clips.push({
-      id: 0,
-      title: "Sample clip",
-      fav: false,
-      created_on: this.getNow(),
-      archived: false
-    });
+    if (this.clips.length === 0) {
+      this.clips.push({
+        id: 0,
+        title: "Sample clip",
+        created_on: this.getNow(),
+        fav: false,
+        archived: false
+      });
+    }
 
     this.reshuffel();
+  },
+
+  computed: {
+    // a computed getter
+    clipsToShow: function() {
+      // `this` points to the vm instance
+      switch (this.activeNavButton) {
+        case 2:
+          return this.clips.filter(clip => {
+            clip.fav === true;
+          });
+        case 3:
+          return this.clips.filter(clip => {
+            clip.archived === true;
+          });
+        default:
+          return this.clips;
+      }
+    }
   },
 
   methods: {
