@@ -23,6 +23,7 @@
             name="input-7-1"
             label="Add a new clip here!"
             v-model="newClip"
+            @keydown="prevent_Space"
           ></v-textarea>
         </v-col>
       </v-row>
@@ -175,6 +176,16 @@ export default {
       //  managing the cookies
 
       this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+    },
+    prevent_Space(event) {
+      //prevent additional white spaces from adding at start of input
+      if (
+        !this.newClip.length &&
+        (event.keyCode === 13 || event.keyCode === 32)
+      ) {
+        //prevent input if enter or space is pressed when clip is empty
+        event.preventDefault();
+      }
     }
   }
 };
