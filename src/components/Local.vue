@@ -7,6 +7,7 @@
             name="input-7-1"
             label="Add a new clip here!"
             v-model="newClip"
+            @keydown="preventSpace"
           ></v-textarea>
         </v-col>
       </v-row>
@@ -263,6 +264,7 @@ export default {
   data: function() {
     return {
       // messeges to be shown
+
       messageCopied: "Copied to clipboard.",
       preview: "Start typing to see preview.",
       emptyText: "Cannot add empty clip.",
@@ -406,6 +408,8 @@ export default {
       this.justGotArchived = true;
     },
     previewCopy() {
+      //  Copy the preview Clip
+
       let toCopy =
         this.newClip.length > 0 ? this.newClip : "Start typing to see preview.";
       navigator.clipboard
@@ -420,6 +424,8 @@ export default {
         });
     },
     previewAddToFav() {
+      // handling preview fav
+
       if (this.previewClip.fav === true) {
         this.previewClip.fav = !this.previewClip.fav;
         this.clearSnacks();
@@ -431,6 +437,8 @@ export default {
       }
     },
     clearSnacks() {
+      //  clear all the snackbars for the new notification snack
+
       this.emptyStr = false;
       this.boolCopied = false;
       this.notBoolCopied = false;
@@ -439,6 +447,15 @@ export default {
       this.justGotArchived = false;
       this.addedToFav = false;
       this.removedFromFav = false;
+    },
+    preventSpace(e) {
+      //prevent additional white spaces from adding at start of input
+
+      if (!this.newClip.length && (e.keyCode === 13 || e.keyCode === 32)) {
+        //prevent input if enter or space is pressed when clip is empty
+
+        e.preventDefault();
+      }
     }
   }
 };
