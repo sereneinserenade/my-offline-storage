@@ -1,80 +1,259 @@
 <template>
   <v-container>
-    <v-snackbar v-model="emptyString" :timeout="timeout">
-      {{ emptyStringText }}
-      <v-btn color="blue" text @click="emptyString = false">Close</v-btn>
-    </v-snackbar>
-    <v-snackbar v-model="copied" :timeout="timeout">
-      {{ stringCopied }}
-      <v-btn color="blue" text @click="copied = false">Close</v-btn>
-    </v-snackbar>
-    <v-snackbar v-model="notCopied" :timeout="timeout">
-      {{ stringNotCopied }}
-      <v-btn color="blue" text @click="notCopied = false">Close</v-btn>
-    </v-snackbar>
-    <v-snackbar v-model="just_got_deleted" :timeout="timeout">
-      {{ gotDeletedString }}
-      <v-btn color="blue" text @click="just_got_deleted = false">Close</v-btn>
-    </v-snackbar>
-    <v-container class="grey lighten-5">
+    <v-container class="mb-2 blue lighten-5">
       <v-row no-gutters>
         <v-col>
           <v-textarea
             name="input-7-1"
             label="Add a new clip here!"
             v-model="newClip"
-            @keydown="prevent_Space"
+            @keydown="preventSpace"
           ></v-textarea>
         </v-col>
       </v-row>
 
-      <v-row class="center">
-        <v-btn @click="onSubmit" class="ma-2" outlined large fab color="green">
-          <v-icon dark>mdi-plus</v-icon>
-        </v-btn>
+      <v-row class="md-2 center">
+        <v-tooltip left>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              @click="onSubmit"
+              x-large
+              icon
+              class="mr-2 myIcon"
+              fab
+              color="blue"
+              v-on="on"
+            >
+              <v-icon>mdi-plus-circle-outline</v-icon>
+            </v-btn>
+          </template>
+          <span>Add Clip</span>
+        </v-tooltip>
       </v-row>
     </v-container>
 
-    <v-container class="center">Preview</v-container>
-
+    <!-- the preview clip -->
     <v-alert text color="red" border="left">
-      <div style="text-align: center">
-        {{ newClip !== "" ? `${newClip}\n` : preview }}
+      <div class="small-info">Created on: {{ previewClip.createdOn }}</div>
+
+      <div class="d-flex justify-space-between">
+        <span class="original-text">
+          {{ newClip !== "" ? `${newClip}\n` : preview }}
+        </span>
+
+        <span>
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn small icon fab color="red" v-on="on">
+                <v-icon dark>mdi-delete-forever</v-icon>
+              </v-btn>
+            </template>
+            <span>Delete Clip ( Preview, can't be deleted )</span>
+          </v-tooltip>
+
+          <!-- Archive icon -->
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn small icon fab color="red" v-on="on">
+                <v-icon dark>mdi-archive-arrow-down-outline</v-icon>
+              </v-btn>
+            </template>
+            <span>Archive Clip ( Preview, can't be archived )</span>
+          </v-tooltip>
+
+          <!-- add to fav if already in favourite then show remove and filled icon-->
+          <v-tooltip v-if="previewClip.fav" top>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                @click="previewAddToFav()"
+                icon
+                fab
+                small
+                color="orange"
+                v-on="on"
+              >
+                <v-icon dark>mdi-star</v-icon>
+              </v-btn>
+            </template>
+            <span>Remove from favourites</span>
+          </v-tooltip>
+
+          <!-- add to fav when not already in fav :-) -->
+          <v-tooltip v-else top>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                @click="previewAddToFav()"
+                icon
+                fab
+                small
+                color="orange"
+                v-on="on"
+              >
+                <v-icon dark>mdi-star-outline</v-icon>
+              </v-btn>
+            </template>
+            <span>Add to Favourites</span>
+          </v-tooltip>
+
+          <!-- copy icon -->
+          <v-tooltip top>
+            <template v-slot:activator="{ on }">
+              <v-btn
+                @click="previewCopy()"
+                icon
+                small
+                fab
+                color="green"
+                v-on="on"
+              >
+                <v-icon class="myIcon">mdi-content-copy</v-icon>
+              </v-btn>
+            </template>
+            <span>Copy Clip</span>
+          </v-tooltip>
+        </span>
       </div>
     </v-alert>
-    <v-container v-if="clips.length > 0">
-      <v-alert
-        v-for="(clip, i) in clips"
-        :key="i"
-        text
-        color="blue"
-        border="left"
-        class="alertJustify"
-      >
-        <span @click="copy(clip.id)">
-          <v-btn class="ma-2" outlined x-small fab color="green">
-            <v-icon dark>mdi-content-copy</v-icon>
-          </v-btn>
-        </span>
-        <span v-if="clip.fav" @click="to_favourite(clip.id)">
-          <v-btn class="ma-2" outlined x-small fab color="orange">
-            <v-icon dark>mdi-star</v-icon>
-          </v-btn>
-        </span>
-        <span v-else @click="to_favourite(clip.id)">
-          <v-btn class="ma-2" outlined x-small fab color="orange">
-            <v-icon dark>mdi-star-outline</v-icon>
-          </v-btn>
-        </span>
-        <span @click="delete_clip(clip.id)">
-          <v-btn class="ma-2" outlined x-small fab color="red">
-            <v-icon dark>mdi-delete-forever</v-icon>
-          </v-btn>
-        </span>
-        <span>{{ clip.title }}</span>
-        <span class="small-info"> Created on: {{ clip.created_on }} </span>
-      </v-alert>
-    </v-container>
+
+    <!-- showing all the clips -->
+    <main v-if="clips.length > 0">
+      <div v-for="(clip, i) in clips" :key="i">
+        <v-alert
+          v-if="!showArchived && !clip.archived"
+          text
+          color="blue"
+          border="left"
+        >
+          <!-- showing the date -->
+          <div class="small-info">Created on: {{ clip.createdOn }}</div>
+
+          <div class="d-flex justify-space-between">
+            <!-- showing the clip text an -->
+            <span class="original-text">{{ clip.title }}</span>
+
+            <!-- all the action buttons -->
+            <span>
+              <!-- delete icon -->
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="deleteClip(clip.id)"
+                    small
+                    icon
+                    fab
+                    color="red"
+                    v-on="on"
+                  >
+                    <v-icon dark>mdi-delete-forever</v-icon>
+                  </v-btn>
+                </template>
+                <span>Delete Clip</span>
+              </v-tooltip>
+
+              <!-- Archive icon -->
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="archiveClip(clip.id)"
+                    small
+                    icon
+                    fab
+                    color="red"
+                    v-on="on"
+                  >
+                    <v-icon dark>mdi-archive-arrow-down-outline</v-icon>
+                  </v-btn>
+                </template>
+                <span>Archive Clip</span>
+              </v-tooltip>
+
+              <!-- add to fav if already in favourite then show remove and filled icon-->
+              <v-tooltip top v-if="clip.fav">
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="favouriteClip(clip.id)"
+                    icon
+                    fab
+                    small
+                    color="orange"
+                    v-on="on"
+                  >
+                    <v-icon dark>mdi-star</v-icon>
+                  </v-btn>
+                </template>
+                <span>Remove from favourites</span>
+              </v-tooltip>
+
+              <!-- add to fav when not already in fav :-) -->
+              <v-tooltip top v-else>
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="favouriteClip(clip.id)"
+                    icon
+                    fab
+                    small
+                    color="orange"
+                    v-on="on"
+                  >
+                    <v-icon dark>mdi-star-outline</v-icon>
+                  </v-btn>
+                </template>
+                <span>Add to Favourites</span>
+              </v-tooltip>
+
+              <!-- copy icon -->
+              <v-tooltip top>
+                <template v-slot:activator="{ on }">
+                  <v-btn
+                    @click="copyClip(clip.id)"
+                    icon
+                    small
+                    fab
+                    color="green"
+                    v-on="on"
+                  >
+                    <v-icon class="myIcon">mdi-content-copy</v-icon>
+                  </v-btn>
+                </template>
+                <span>Copy Clip</span>
+              </v-tooltip>
+            </span>
+          </div>
+        </v-alert>
+      </div>
+    </main>
+
+    <!-- all the notifications to user -->
+    <div>
+      <v-snackbar v-model="emptyStr" :timeout="timeout">
+        {{ emptyText }}
+        <v-btn color="blue" text @click="emptyStr = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="boolCopied" :timeout="timeout">
+        {{ messageCopied }}
+        <v-btn color="blue" text @click="boolCopied = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="notBoolCopied" :timeout="timeout">
+        {{ stringNotCopied }}
+        <v-btn color="blue" text @click="notBoolCopied = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="justGotDeleted" :timeout="timeout">
+        {{ gotDeletedString }}
+        <v-btn color="blue" text @click="justGotDeleted = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="justGotArchived" :timeout="timeout">
+        {{ messageArchived }}
+        <v-btn color="blue" text @click="justGotArchived = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="addedToFav" :timeout="timeout">
+        {{ gotAddToFav }}
+        <v-btn color="blue" text @click="addedToFav = false">Close</v-btn>
+      </v-snackbar>
+      <v-snackbar v-model="removedFromFav" :timeout="timeout">
+        {{ gotRemovedFromFav }}
+        <v-btn color="blue" text @click="removedFromFav = false">Close</v-btn>
+      </v-snackbar>
+    </div>
   </v-container>
 </template>
 
@@ -84,20 +263,39 @@ export default {
 
   data: function() {
     return {
-      stringCopied: "Copied to clipboard.",
+      // messeges to be shown
+
+      messageCopied: "Copied to clipboard.",
+      preview: "Start typing to see preview.",
+      emptyText: "Cannot add empty clip.",
+      notCopied: "Couldn't copy to the clipboard, please grant the permission.",
+      gotDeletedString: "Clip deleted!",
+      gotAddToFav: "Added to favourites!",
+      gotRemovedFromFav: "Removed from favourites!",
+      messageArchived: "Clip Archived!",
+
+      // logical parameters
+      emptyStr: false,
+      boolCopied: false,
+      notBoolCopied: false,
+      justGotDeleted: false,
+      showArchived: false,
+      justGotArchived: false,
+      addedToFav: false,
+      removedFromFav: false,
+
+      // logic for the new life
       newClip: "",
       clips: [],
-      preview: "Start typing to see preview",
-      emptyString: false,
-      copied: false,
-      notCopied: false,
-      emptyStringText: "Cannot add empty clip.",
-      timeout: 1000,
-      stringNotCopied:
-        "Could not copy to the clipboard, is the App permitted ?",
-      gotDeletedString: "Clip deleted!",
-      just_got_deleted: false,
-      messageAddToFav: "Added to favourites!"
+      previewClip: {
+        id: 1,
+        fav: false,
+        createdOn: this.getNow(),
+        archived: false
+      },
+
+      // forein component requirements
+      timeout: 2000
     };
   },
 
@@ -105,12 +303,34 @@ export default {
     if (JSON.parse(this.$cookies.get("clips"))) {
       this.clips = JSON.parse(this.$cookies.get("clips"));
     }
-    this.clips.forEach(e => {
-      console.log(e.id, e.title);
-    });
+
+    // adding sample clip
+    if (this.clips.length === 0) {
+      this.clips.push({
+        id: 0,
+        title: "Sample clip.",
+        fav: false,
+        createdOn: this.getNow(),
+        archived: false
+      });
+    }
+
+    this.reorder();
   },
 
   methods: {
+    reorder() {
+      // reshuffling the array for the exact indexes
+
+      this.clips.filter(clip => {
+        clip.id = this.clips.indexOf(clip);
+      });
+    },
+    manageCookie() {
+      //  managing the cookies
+
+      this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+    },
     getNow() {
       // getting the current time
 
@@ -123,68 +343,118 @@ export default {
       //  doing all the internal process to update
 
       if (this.newClip !== "") {
-        var newClipObj = {
+        let newClipObj = {
           id: this.clips.length,
           title: this.newClip,
           fav: false,
-          created_on: this.getNow()
+          createdOn: this.getNow(),
+          archived: false
         };
 
         // adding the clip to the start of the array and then reshuffling and making the new clip = ""
         this.clips = [newClipObj, ...this.clips];
-        this.reshuffel();
+        this.reorder();
         this.newClip = "";
-        this.manage_cookie();
+        this.manageCookie();
       } else {
-        this.emptyString = true;
+        this.clearSnacks();
+        this.emptyStr = true;
       }
     },
-    copy(id) {
+    copyClip(id) {
       // method to copy to the clipboard if the permission is given
 
       navigator.clipboard
         .writeText(this.clips[id].title)
         .then(() => {
-          this.copied = true;
+          this.clearSnacks();
+          this.boolCopied = true;
         })
         .catch(() => {
-          this.notCopied = true;
+          this.clearSnacks();
+          this.notBoolCopied = true;
         });
     },
-    delete_clip(id) {
+    deleteClip(id) {
       // deleting the clip
 
       this.clips.splice(id, 1);
-      this.reshuffel();
-      this.manage_cookie();
-      this.just_got_deleted = true;
+      this.reorder();
+      this.manageCookie();
+      this.clearSnacks();
+      this.justGotDeleted = true;
     },
-    to_favourite(id) {
+    favouriteClip(id) {
       // adding to favourite
 
-      this.clips[id].fav = !this.clips[id].fav;
-      this.manage_cookie();
+      if (this.clips[id].fav === true) {
+        this.clips[id].fav = !this.clips[id].fav;
+        this.manageCookie();
+        this.clearSnacks();
+        this.removedFromFav = true;
+      } else {
+        this.clips[id].fav = !this.clips[id].fav;
+        this.manageCookie();
+        this.clearSnacks();
+        this.addedToFav = true;
+      }
     },
-    reshuffel() {
-      // reshuffling the array for the exact indexes
+    archiveClip(id) {
+      // adding to favourite
 
-      this.clips.filter(clip => {
-        clip.id = this.clips.indexOf(clip);
-      });
+      this.clips[id].archived = !this.clips[id].archived;
+      this.manageCookie();
+      this.clearSnacks();
+      this.justGotArchived = true;
     },
-    manage_cookie() {
-      //  managing the cookies
+    previewCopy() {
+      //  Copy the preview Clip
 
-      this.$cookies.set("clips", JSON.stringify(this.clips), Infinity);
+      let toCopy =
+        this.newClip.length > 0 ? this.newClip : "Start typing to see preview.";
+      navigator.clipboard
+        .writeText(toCopy)
+        .then(() => {
+          this.clearSnacks();
+          this.boolCopied = true;
+        })
+        .catch(() => {
+          this.clearSnacks();
+          this.notBoolCopied = true;
+        });
     },
-    prevent_Space(event) {
+    previewAddToFav() {
+      // handling preview fav
+
+      if (this.previewClip.fav === true) {
+        this.previewClip.fav = !this.previewClip.fav;
+        this.clearSnacks();
+        this.removedFromFav = true;
+      } else {
+        this.previewClip.fav = !this.previewClip.fav;
+        this.clearSnacks();
+        this.addedToFav = true;
+      }
+    },
+    clearSnacks() {
+      //  clear all the snackbars for the new notification snack
+
+      this.emptyStr = false;
+      this.boolCopied = false;
+      this.notBoolCopied = false;
+      this.justGotDeleted = false;
+      this.showArchived = false;
+      this.justGotArchived = false;
+      this.addedToFav = false;
+      this.removedFromFav = false;
+    },
+    preventSpace(e) {
       //prevent additional white spaces from adding at start of input
-      if (
-        !this.newClip.length &&
-        (event.keyCode === 13 || event.keyCode === 32)
-      ) {
+
+      if (!this.newClip.length && (e.keyCode === 13 || e.keyCode === 32)) {
         //prevent input if enter or space is pressed when clip is empty
-        event.preventDefault();
+
+        e.preventDefault();
       }
     }
   }
@@ -196,16 +466,17 @@ export default {
   display: flex;
   justify-content: center;
 }
+
 .small-info {
-  position: absolute;
-  right: 0.36em;
-  bottom: 0.18em;
-  font-size: 0.85em;
+  font-size: 0.65em;
 }
-/* better look for the small devices */
-@media (max-width: 720px) {
-  .small-info {
-    font-size: 0.65em;
-  }
+
+.original-text::first-letter {
+  font-size: 1.5em;
+}
+
+.v-alert {
+  padding: 6px 12px 6px 14px !important;
+  border-radius: 8px !important;
 }
 </style>
